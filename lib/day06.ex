@@ -1,7 +1,8 @@
 defmodule Day06 do
   def part1(file_name) do
     file_name
-    |> simple_parse()
+    |> lines()
+    |> Stream.map(&split_line/1)
     |> pivot()
     |> Enum.reduce(0, fn list, total ->
       [op | nums] = list |> Enum.reverse()
@@ -17,11 +18,10 @@ defmodule Day06 do
     lines = lines(file_name)
     [ops | nums] = Enum.reverse(lines)
 
-    ops = String.split(ops, " ", trim: true)
+    ops = split_line(ops)
     nums = Enum.reverse(nums)
 
-    longest_num =
-      nums |> Enum.map(&longest_number/1) |> Enum.max()
+    longest_num = length(nums)
 
     nums
     |> Enum.map(fn line ->
@@ -48,28 +48,14 @@ defmodule Day06 do
     end)
   end
 
-  def longest_number(line) do
-    Regex.scan(~r/\d+/, line, capture: :all)
-    |> List.flatten()
-    |> Enum.sort_by(&String.length/1, :desc)
-    |> hd()
-    |> String.length()
+  def split_line(line) do
+    String.split(line, " ", trim: true)
   end
 
   def lines(file_name) do
     file_name
     |> File.stream!()
     |> Stream.map(&String.trim_trailing/1)
-  end
-
-  def simple_parse(file_name) do
-    file_name
-    |> File.stream!()
-    |> Stream.map(fn line ->
-      line
-      |> String.trim_trailing()
-      |> String.split(" ", trim: true)
-    end)
   end
 
   def pivot(list) do
