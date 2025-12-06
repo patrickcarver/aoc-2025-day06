@@ -1,25 +1,16 @@
 defmodule Day06 do
   def part1(file_name) do
-    file_name
-    |> lines()
+    {nums, ops} = parse(file_name)
+
+    nums
     |> Stream.map(&split_line/1)
     |> pivot()
-    |> Enum.reduce(0, fn list, total ->
-      [op | nums] = list |> Enum.reverse()
-
-      {result, []} =
-        nums |> Enum.intersperse(op) |> Enum.join() |> Code.eval_string()
-
-      total + result
-    end)
+    |> Enum.zip(ops)
+    |> Enum.reduce(0, &add_op_result_to_total/2)
   end
 
   def part2(file_name) do
-    lines = lines(file_name)
-    [ops | nums] = Enum.reverse(lines)
-
-    ops = split_line(ops)
-    nums = Enum.reverse(nums)
+    {nums, ops} = parse(file_name)
 
     longest_num = length(nums)
 
@@ -27,25 +18,49 @@ defmodule Day06 do
     |> Enum.map(fn line ->
       line
       |> String.graphemes()
-      |> then(fn graphemes ->
-        list_size = length(graphemes)
-        needed_padding = rem(list_size, longest_num)
-        needed_padding = if needed_padding == 0, do: 0, else: longest_num - needed_padding
-        padding = List.duplicate(" ", needed_padding)
-        graphemes ++ padding
-      end)
+      |> trail_pad_graphemes(longest_num)
     end)
     |> pivot()
+    |> reform_nums()
+    |> Enum.zip(ops)
+    |> Enum.reduce(0, &add_op_result_to_total/2)
+  end
+
+  def add_op_result_to_total({nums, op}, total) do
+    total + perform_op(nums, op)
+  end
+
+  def parse(file_name) do
+    lines = lines(file_name)
+    [ops | nums] = Enum.reverse(lines)
+
+    ops = split_line(ops)
+    nums = Enum.reverse(nums)
+
+    {nums, ops}
+  end
+
+  def trail_pad_graphemes(graphemes, longest_num) do
+    list_size = length(graphemes)
+    needed_padding = rem(list_size, longest_num)
+    needed_padding = if needed_padding == 0, do: 0, else: longest_num - needed_padding
+    padding = List.duplicate(" ", needed_padding)
+    graphemes ++ padding
+  end
+
+  def reform_nums(nums) do
+    nums
     |> Enum.map(fn list -> list |> Enum.join() |> String.trim() end)
     |> Enum.chunk_by(fn item -> item == "" end)
     |> Enum.reject(fn item -> item == [""] end)
-    |> Enum.zip(ops)
-    |> Enum.reduce(0, fn {nums, op}, total ->
-      {result, []} =
-        nums |> Enum.intersperse(op) |> Enum.join() |> Code.eval_string()
+  end
 
-      total + result
-    end)
+  def perform_op(nums, op) do
+    nums
+    |> Enum.intersperse(op)
+    |> Enum.join()
+    |> Code.eval_string()
+    |> elem(0)
   end
 
   def split_line(line) do
