@@ -6,7 +6,7 @@ defmodule Day06 do
     |> Stream.map(&split_line/1)
     |> pivot()
     |> Enum.zip(ops)
-    |> Enum.reduce(0, &add_op_result_to_total/2)
+    |> Enum.reduce(0, &add_calculation_to_total/2)
   end
 
   def part2(file_name) do
@@ -21,13 +21,13 @@ defmodule Day06 do
       |> trail_pad_graphemes(longest_num)
     end)
     |> pivot()
-    |> reform_nums()
+    |> reconstruct_nums()
     |> Enum.zip(ops)
-    |> Enum.reduce(0, &add_op_result_to_total/2)
+    |> Enum.reduce(0, &add_calculation_to_total/2)
   end
 
-  def add_op_result_to_total({nums, op}, total) do
-    total + perform_op(nums, op)
+  def add_calculation_to_total({nums, op}, total) do
+    total + calculate(nums, op)
   end
 
   def parse(file_name) do
@@ -48,14 +48,14 @@ defmodule Day06 do
     graphemes ++ padding
   end
 
-  def reform_nums(nums) do
+  def reconstruct_nums(nums) do
     nums
     |> Enum.map(fn list -> list |> Enum.join() |> String.trim() end)
     |> Enum.chunk_by(fn item -> item == "" end)
     |> Enum.reject(fn item -> item == [""] end)
   end
 
-  def perform_op(nums, op) do
+  def calculate(nums, op) do
     nums
     |> Enum.intersperse(op)
     |> Enum.join()
